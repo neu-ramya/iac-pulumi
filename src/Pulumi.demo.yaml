@@ -2,3 +2,12 @@ encryptionsalt: v1:jSFiiMkqhmo=:v1:idlr622RfQ6TSglh:DWdRRNhVpSFQ9W4vHUeNbJAPAJnK
 config:
   aws:profile: demo
   aws:region: us-west-1
+  pulumi:ownerTag: demo
+  pulumi:vpcName: demo-csye6225
+  pulumi:internetGatewayName: demo-ig-csye6225
+  pulumi:internetGatewayAttachmentName: demo-igw-csye6225
+  pulumi:publicRouteTable: demo-pub-route-table-csye6225
+  pulumi:privateRouteTable: demo-pri-route-table-csye6225
+  pulumi:publicRouteName: demo-pub-route-csye6225
+  pulumi:openCIDRblock: "0.0.0.0/0"
+  pulumi:vpcCIDRblock: "10.0.0.0/16"
