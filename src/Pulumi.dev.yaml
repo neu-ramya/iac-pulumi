@@ -11,3 +11,5 @@ config:
   pulumi:publicRouteName: pub-route-csye6225
   pulumi:openCIDRblock: "0.0.0.0/0"
   pulumi:vpcCIDRblock: "10.0.0.0/16"
+  pulumi:publicSubnetCIDRblock: "10.0.0.0/24"
+  pulumi:privateSubnetCIDRblock: "10.0.1.0/24"

@@ -35,7 +35,7 @@ async function main() {
         const publicSubnet = new aws.ec2.Subnet(`${az}-public-subnet`, {
             vpcId: vpc.id,
             availabilityZone: az,
-            cidrBlock: "10.0.0.0/24",
+            cidrBlock: pulumiConfig.require("publicSubnetCIDRblock"),
             mapPublicIpOnLaunch: true,
             tags: {
                 Name: "public-subnet",
@@ -46,7 +46,7 @@ async function main() {
         const privateSubnet = new aws.ec2.Subnet(`${az}-private-subnet`, {
             vpcId: vpc.id,
             availabilityZone: az,
-            cidrBlock: "10.0.1.0/24",
+            cidrBlock: pulumiConfig.require("privateSubnetCIDRblock"),
             tags: {
                 Name: "private-subnet",
                 Owner: pulumiConfig.require("ownerTag")
