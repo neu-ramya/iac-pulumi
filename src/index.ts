@@ -27,15 +27,15 @@ async function main() {
     }
 
     // Choose 3 availability zones from the list.
-    const selectedAZs = availableAZs.names?.slice(0, numberOfAZsToSelect) 
+    const selectedAZs = availableAZs.names?.slice(0, numAZsToCreate) 
     
     
     for (const az of selectedAZs) {
         const publicSubnet = new aws.ec2.Subnet(`${az}-public-subnet`, {
             vpcId: vpc.id,
             availabilityZone: az,
-            cidrBlock: "10.0.0.0/24", // Replace with the desired CIDR block for the public subnet.
-            mapPublicIpOnLaunch: true, // Enable auto-assign public IP addresses.
+            cidrBlock: "10.0.0.0/24",
+            mapPublicIpOnLaunch: true,
             tags: {
                 Name: "public-subnet",
             },
@@ -44,7 +44,7 @@ async function main() {
         const privateSubnet = new aws.ec2.Subnet(`${az}-private-subnet`, {
             vpcId: vpc.id,
             availabilityZone: az,
-            cidrBlock: "10.0.1.0/24", // Replace with the desired CIDR block for the private subnet.
+            cidrBlock: "10.0.1.0/24",
             tags: {
                 Name: "private-subnet",
             },
