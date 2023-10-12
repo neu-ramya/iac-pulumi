@@ -2,3 +2,12 @@ encryptionsalt: v1:Mkakvkn11PE=:v1:p8Wz6+VL1UlZpZG7:QgV9R0opINvnCRiKfERVwJIbhCEv
 config:
   aws:profile: dev
   aws:region: us-east-1
+  pulumi:ownerTag: ramya
+  pulumi:vpcName: vpc-csye6225
+  pulumi:internetGatewayName: ig-csye6225
+  pulumi:internetGatewayAttachmentName: igw-csye6225
+  pulumi:publicRouteTable: pub-route-table-csye6225
+  pulumi:privateRouteTable: pri-route-table-csye6225
+  pulumi:publicRouteName: pub-route-csye6225
+  pulumi:openCIDRblock: "0.0.0.0/0"
+  pulumi:vpcCIDRblock: "10.0.0.0/16"
