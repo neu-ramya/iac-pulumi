@@ -1,4 +1,4 @@
-encryptionsalt: v1:Mkakvkn11PE=:v1:p8Wz6+VL1UlZpZG7:QgV9R0opINvnCRiKfERVwJIbhCEvdg==
+encryptionsalt: v1:pSW28OPp2qg=:v1:Ryxr+3Mm2X6f/KHY:4B0RFiOx0kLWDWAobwOICg4XxUoWIQ==
 config:
   aws:profile: dev
   aws:region: us-east-1
@@ -11,5 +11,9 @@ config:
   pulumi:publicRouteName: pub-route-csye6225
   pulumi:openCIDRblock: "0.0.0.0/0"
   pulumi:vpcCIDRblock: "10.0.0.0/16"
-  pulumi:publicSubnetCIDRblock: "10.0.0.0/24"
-  pulumi:privateSubnetCIDRblock: "10.0.1.0/24"
+  pulumi:publicSubnetCIDRblock-1: "10.0.0.0/24"
+  pulumi:privateSubnetCIDRblock-1: "10.0.1.0/24"
+  pulumi:publicSubnetCIDRblock-2: "10.0.2.0/24"
+  pulumi:privateSubnetCIDRblock-2: "10.0.3.0/24"
+  pulumi:publicSubnetCIDRblock-3: "10.0.4.0/24"
+  pulumi:privateSubnetCIDRblock-3: "10.0.5.0/24"
