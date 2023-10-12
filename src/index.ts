@@ -30,12 +30,12 @@ async function main() {
     const selectedAZs = availableAZs.names?.slice(0, numAZsToCreate) 
     let  publicSubnetArray = [];
     let  privateSubnetArray = [];
-
+    let i=1;
     for (const az of selectedAZs) {
         const publicSubnet = new aws.ec2.Subnet(`${az}-public-subnet`, {
             vpcId: vpc.id,
             availabilityZone: az,
-            cidrBlock: pulumiConfig.require("publicSubnetCIDRblock"),
+            cidrBlock: pulumiConfig.require(`publicSubnetCIDRblock-${i}`),
             mapPublicIpOnLaunch: true,
             tags: {
                 Name: "public-subnet",
@@ -46,20 +46,20 @@ async function main() {
         const privateSubnet = new aws.ec2.Subnet(`${az}-private-subnet`, {
             vpcId: vpc.id,
             availabilityZone: az,
-            cidrBlock: pulumiConfig.require("privateSubnetCIDRblock"),
+            cidrBlock: pulumiConfig.require(`privateSubnetCIDRblock-${i}`),
             tags: {
                 Name: "private-subnet",
                 Owner: pulumiConfig.require("ownerTag")
             },
         });
-
+        i+=1;
         publicSubnetArray.push(publicSubnet);
         privateSubnetArray.push(privateSubnet);
     }
 
     const internetGateway = new aws.ec2.InternetGateway(pulumiConfig.require("internetGatewayName"), {
         tags: {
-            Name: "ramya-ig",
+            Name: `ig-${pulumiConfig.require("ownerTag")}`,
             Owner: pulumiConfig.require("ownerTag")
         },
     });
