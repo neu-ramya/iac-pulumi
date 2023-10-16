@@ -1,5 +1,7 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
+import ec2 from './ec2';
+
 
 async function main() {
     let pulumiConfig = new pulumi.Config("pulumi");
@@ -107,4 +109,5 @@ async function main() {
     });
 }
 
-main();
+// main();
+ec2();
