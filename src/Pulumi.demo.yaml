@@ -6,8 +6,8 @@ config:
   pulumi:vpcName: demo-csye6225
   pulumi:internetGatewayName: demo-ig-csye6225
   pulumi:internetGatewayAttachmentName: demo-igw-csye6225
-  pulumi:publicRouteTable: demo-pub-route-table-csye6225
-  pulumi:privateRouteTable: demo-pri-route-table-csye6225
+  pulumi:publicRouteTableName: demo-pub-route-table-csye6225
+  pulumi:privateRouteTableName: demo-pri-route-table-csye6225
   pulumi:publicRouteName: demo-pub-route-csye6225
   pulumi:openCIDRblock: "0.0.0.0/0"
   pulumi:vpcCIDRblock: "10.0.0.0/16"
@@ -18,3 +18,7 @@ config:
   pulumi:publicSubnetCIDRblock-3: "10.0.4.0/24"
   pulumi:privateSubnetCIDRblock-3: "10.0.5.0/24"
   pulumi:ec2Type: "t3.nano"
+  pulumi:ec2Name: "pulumi-dev-instance"
+  pulumi:sgName: "application security group"
+  pulumi:AMIShareUsers: "042487768049"
+  pulumi:AMISelectorRegex: "csye6225-debian12-[0-9]+"

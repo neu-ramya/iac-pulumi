@@ -13,6 +13,8 @@
         "forceConsistentCasingInFileNames": true
     },
     "files": [
-        "index.ts"
+        "index.ts",
+        "networking.ts",
+        "ec2.ts"
     ]
 }
