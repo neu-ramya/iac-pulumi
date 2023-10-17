@@ -67,7 +67,7 @@ export async function ami(owners: [string] , nameRegex: string) {
             {
                 name: "is-public",
                 values: ["false"]
-            }
+            },
           ]
         })
       );
