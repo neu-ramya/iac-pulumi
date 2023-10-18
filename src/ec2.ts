@@ -13,29 +13,29 @@ export async function securityGroup(vpc: Vpc, ipAddress: string, name: string) {
       ingress: [
         {
           description: "SSH from VPC",
-          fromPort: 22,
-          toPort: 22,
+          fromPort: parseInt(pulumiConfig.require("SSHport")),
+          toPort: parseInt(pulumiConfig.require("SSHport")),
           protocol: "tcp",
           cidrBlocks: [ipAddress],
         },
         {
           description: "HTTP from VPC",
-          fromPort: 80,
-          toPort: 80,
+          fromPort: parseInt(pulumiConfig.require("HTTPport")),
+          toPort: parseInt(pulumiConfig.require("HTTPport")),
           protocol: "tcp",
           cidrBlocks: [ipAddress],
         },
         {
           description: "TLS from VPC",
-          fromPort: 443,
-          toPort: 443,
+          fromPort: parseInt(pulumiConfig.require("HTTPSport")),
+          toPort: parseInt(pulumiConfig.require("HTTPSport")),
           protocol: "tcp",
           cidrBlocks: [ipAddress],
         },
         {
           description: "Application port",
-          fromPort: 3000,
-          toPort: 3000,
+          fromPort: parseInt(pulumiConfig.require("Appport")),
+          toPort: parseInt(pulumiConfig.require("Appport")),
           protocol: "tcp",
           cidrBlocks: [ipAddress],
         },
@@ -77,6 +77,7 @@ export async function ami(owners: [string] , nameRegex: string) {
 export async function ec2Instance(name: string, amiId: pulumi.Output<string>, securityGroup: pulumi.Input<string>, publicSubnet: Subnet) {
     const instance = new aws.ec2.Instance(name, {
         ami: amiId,
+        keyName: pulumiConfig.require("keyPairName"), 
         instanceType: pulumiConfig.require("ec2Type"),
         subnetId: publicSubnet.id,
         vpcSecurityGroupIds: [securityGroup],

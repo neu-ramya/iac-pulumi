@@ -22,3 +22,8 @@ config:
   pulumi:sgName: "application security group"
   pulumi:AMIShareUsers: "042487768049"
   pulumi:AMISelectorRegex: "csye6225-debian12-[0-9]+"
+  pulumi:SSHport: "22" 
+  pulumi:HTTPport: "80"
+  pulumi:HTTPSport: "443"
+  pulumi:Appport: "3000"
+  pulumi:keyPairName: "demo-ec2-key"
