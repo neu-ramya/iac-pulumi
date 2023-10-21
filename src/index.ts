@@ -1,6 +1,7 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as ec2 from "./ec2";
 import * as networking from "./networking";
+import * as rds from "./rds";
 let pulumiConfig = new pulumi.Config("pulumi");
 
 async function main() {
@@ -29,13 +30,14 @@ async function main() {
   let ig = await networking.internetGateway(igName, igAttachmentName, vpc);
   networking.routing(pubRTName, privRTName, pubRouteName, vpc, ig);
 
-  let sg = await ec2.securityGroup(vpc, ipAddressAsString, sgName);
-  let ami = await ec2.ami([AMIShareUsers], AMIFilterRegex)
-  let instance = await ec2.ec2Instance(ec2Name, ami.id, sg.id, subnet[0][0])
+  // let sg = await ec2.securityGroup(vpc, ipAddressAsString, sgName);
+  // let ami = await ec2.ami([AMIShareUsers], AMIFilterRegex)
+  // let instance = await ec2.ec2Instance(ec2Name, ami.id, sg.id, subnet[0][0])
   
-  module.exports = {
-    instanceURL: pulumi.interpolate`http://${instance.publicIp}`,
-  };
+  let rdspg = await rds.createRDSparametergroup();
+  
+  let rdssubnet = await rds.createSubnetGroup(subnet[1][0]);
+  let rdsinstance = await rds.createRDSinstance(rdssubnet, rdspg);
 }
 
 main();
