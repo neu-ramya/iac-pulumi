@@ -30,7 +30,7 @@ export async function createRDSinstance(
   rdsparametergroup: ParameterGroup,
   securityGroup: pulumi.Input<string>
 ) {
-  const _default = new aws.rds.Instance("default", {
+  const rdsInstance = new aws.rds.Instance("rds-instance", {
     allocatedStorage: 10,
     dbName: "csye6225",
     identifier: "csye6225",
@@ -45,6 +45,7 @@ export async function createRDSinstance(
     username: "foo",
     vpcSecurityGroupIds: [securityGroup]
   });
+  return rdsInstance;
 }
 
 module.exports = {
