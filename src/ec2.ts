@@ -4,57 +4,36 @@ import { Vpc } from "@pulumi/aws/ec2";
 import { Subnet } from "@pulumi/aws/ec2/subnet";
 let pulumiConfig = new pulumi.Config("pulumi");
 
+export async function emptySecurityGroup(vpc: Vpc, name: string) {
+  const securityGroup = new aws.ec2.SecurityGroup(name,{
+    vpcId: vpc.id,
+  });
 
-export async function securityGroup(vpc: Vpc, ipAddress: string, name: string) {
-  const securityGroup = new aws.ec2.SecurityGroup(name,
-    {
-      description: "Allow TLS inbound traffic",
-      vpcId: vpc.id,
-      ingress: [
-        {
-          description: "SSH from VPC",
-          fromPort: parseInt(pulumiConfig.require("SSHport")),
-          toPort: parseInt(pulumiConfig.require("SSHport")),
-          protocol: "tcp",
-          cidrBlocks: [ipAddress],
-        },
-        {
-          description: "HTTP from VPC",
-          fromPort: parseInt(pulumiConfig.require("HTTPport")),
-          toPort: parseInt(pulumiConfig.require("HTTPport")),
-          protocol: "tcp",
-          cidrBlocks: [ipAddress],
-        },
-        {
-          description: "TLS from VPC",
-          fromPort: parseInt(pulumiConfig.require("HTTPSport")),
-          toPort: parseInt(pulumiConfig.require("HTTPSport")),
-          protocol: "tcp",
-          cidrBlocks: [ipAddress],
-        },
-        {
-          description: "Application port",
-          fromPort: parseInt(pulumiConfig.require("Appport")),
-          toPort: parseInt(pulumiConfig.require("Appport")),
-          protocol: "tcp",
-          cidrBlocks: [ipAddress],
-        },
-      ],
-      egress: [
-        {
-          fromPort: 0,
-          toPort: 0,
-          protocol: "-1",
-          cidrBlocks: ["0.0.0.0/0"],
-          ipv6CidrBlocks: ["::/0"],
-        },
-      ],
-      tags: {
-        Name: name,
-      },
-    }
-  );
   return securityGroup;
+}
+
+export async function addCIDRSecurityGroupRule(name: string, protocol: string, targetSecurityGroupId: pulumi.Output<string>, fromPort: number, toPort: number, type: string, cidrBlock: string){
+  new aws.ec2.SecurityGroupRule(name, {
+    type: type,
+    description: name,
+    fromPort: fromPort,
+    toPort: toPort,
+    protocol: protocol,
+    cidrBlocks: [cidrBlock],
+    securityGroupId: targetSecurityGroupId
+});
+}
+
+export async function addSecurityGroupRule(name: string, protocol: string, targetSecurityGroupId: pulumi.Output<string>, srcSecurityGroupId: pulumi.Output<string>, fromPort: number, toPort: number, type: string) {
+  new aws.ec2.SecurityGroupRule(name, {
+      type: type,
+      description: name,
+      fromPort: fromPort,
+      toPort: toPort,
+      protocol: protocol,
+      securityGroupId: targetSecurityGroupId,
+      sourceSecurityGroupId: srcSecurityGroupId
+  });
 }
 
 export async function ami(owners: [string] , nameRegex: string) {
@@ -104,7 +83,9 @@ export async function ec2Instance(name: string, amiId: pulumi.Output<string>, se
 
 
 module.exports = {
-    securityGroup: securityGroup,
     ami: ami,
-    ec2Instance: ec2Instance
+    ec2Instance: ec2Instance,
+    addCIDRSecurityGroupRule: addCIDRSecurityGroupRule,
+    addSecurityGroupRule: addSecurityGroupRule,
+    emptySecurityGroup: emptySecurityGroup
 }
