@@ -2,19 +2,20 @@ import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Vpc } from "@pulumi/aws/ec2";
 import { Subnet } from "@pulumi/aws/ec2/subnet";
+import { Instance } from "@pulumi/aws/rds/instance";
 let pulumiConfig = new pulumi.Config("pulumi");
 
-export async function createEnvFile(dbhost: pulumi.Output<string>, fileName: string) {
+export async function createEnvFile(rdsInstance: Instance, fileName: string) {
   const userData = `#!/bin/bash
-touch ${fileName}
-echo "DB_CONNECTION=mysql" >> ${fileName}
-echo "DB_HOST=${dbhost}" >> ${fileName}
-echo "DB_PORT=3306" >> ${fileName}
-echo "DB_DATABASE=csye6225" >> ${fileName}
-echo "DB_USER=webapp-csye6225" >> ${fileName}
-echo "DB_PASS=webapp-csye6225" >> ${fileName}
-echo "PROF_TABLES=false" >> ${fileName}`;
-return userData;
+    touch ${fileName}
+    echo "DB_CONNECTION=mysql" >> ${fileName}
+    echo "DB_HOST=${rdsInstance.address}" >> ${fileName}
+    echo "DB_PORT=3306" >> ${fileName}
+    echo "DB_DATABASE=csye6225" >> ${fileName}
+    echo "DB_USER=webapp-csye6225" >> ${fileName}
+    echo "DB_PASS=webapp-csye6225" >> ${fileName}
+    echo "PROF_TABLES=false" >> ${fileName}`;
+  return userData;
 }
 
 export async function emptySecurityGroup(vpc: Vpc, name: string) {
@@ -123,5 +124,5 @@ module.exports = {
   addCIDRSecurityGroupRule: addCIDRSecurityGroupRule,
   addSecurityGroupRule: addSecurityGroupRule,
   emptySecurityGroup: emptySecurityGroup,
-  createEnvFile: createEnvFile
+  createEnvFile: createEnvFile,
 };

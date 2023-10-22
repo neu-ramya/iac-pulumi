@@ -2,6 +2,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as ec2 from "./ec2";
 import * as networking from "./networking";
 import * as rds from "./rds";
+import { Instance } from "@pulumi/aws/rds/instance";
 let pulumiConfig = new pulumi.Config("pulumi");
 
 async function main() {
@@ -32,7 +33,6 @@ async function main() {
   
   let ami = await ec2.ami([AMIShareUsers], AMIFilterRegex);
 
-
   let rdspg = await rds.createRDSparametergroup();
   let rdssubnet = await rds.createSubnetGroup(subnet[1]);
   let ec2SecurityGroup = await ec2.emptySecurityGroup(vpc, sgName);
@@ -41,7 +41,7 @@ async function main() {
   // await ec2.addCIDRSecurityGroupRule("Outbound", "-1",rdsSecurityGroup.id, 0, 0, "egress", "0.0.0.0/0")
 
   let rdsinstance = await rds.createRDSinstance(rdssubnet, rdspg, rdsSecurityGroup.id);
-  let env = await ec2.createEnvFile(rdsinstance.address, "/home/admin/target/dbenv");
+  let env = await ec2.createEnvFile(rdsinstance, "/home/admin/target/dbenv");
 
   await ec2.addCIDRSecurityGroupRule("SSH Port", "tcp", ec2SecurityGroup.id, 22, 22, "ingress", ipAddressAsString)
   await ec2.addCIDRSecurityGroupRule("HTTP Port", "tcp", ec2SecurityGroup.id, 80, 80, "ingress", ipAddressAsString)
