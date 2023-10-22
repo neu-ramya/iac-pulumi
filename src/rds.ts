@@ -27,7 +27,8 @@ export async function createSubnetGroup(privateSubnet: Subnet[]){
 
 export async function createRDSinstance(
   subnetGroup: SubnetGroup ,
-  rdsparametergroup: ParameterGroup
+  rdsparametergroup: ParameterGroup,
+  securityGroup: pulumi.Input<string>
 ) {
   const _default = new aws.rds.Instance("default", {
     allocatedStorage: 10,
@@ -42,6 +43,7 @@ export async function createRDSinstance(
     parameterGroupName: rdsparametergroup.name,
     password: "foobarbaz",
     username: "foo",
+    vpcSecurityGroupIds: [securityGroup]
   });
 }
 

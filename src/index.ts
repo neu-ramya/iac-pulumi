@@ -30,13 +30,23 @@ async function main() {
   let ig = await networking.internetGateway(igName, igAttachmentName, vpc);
   networking.routing(pubRTName, privRTName, pubRouteName, vpc, ig);
 
-  let sg = await ec2.securityGroup(vpc, ipAddressAsString, sgName);
-  let ami = await ec2.ami([AMIShareUsers], AMIFilterRegex)
-  let instance = await ec2.ec2Instance(ec2Name, ami.id, sg.id, subnet[0][0])
+  let ec2SecurityGroup = await ec2.emptySecurityGroup(vpc, sgName);
+  await ec2.addCIDRSecurityGroupRule("SSH Port", "tcp", ec2SecurityGroup.id, 22, 22, "ingress", ipAddressAsString)
+  await ec2.addCIDRSecurityGroupRule("HTTP Port", "tcp", ec2SecurityGroup.id, 80, 80, "ingress", ipAddressAsString)
+  await ec2.addCIDRSecurityGroupRule("HTTPS Port", "tcp",ec2SecurityGroup.id, 443, 443, "ingress", ipAddressAsString)
+  await ec2.addCIDRSecurityGroupRule("Application Port", "tcp",ec2SecurityGroup.id, 3000, 3000, "ingress", ipAddressAsString)
+  await ec2.addCIDRSecurityGroupRule("Outbound", "-1",ec2SecurityGroup.id, 0, 0, "egress", "0.0.0.0/0")
   
+  let ami = await ec2.ami([AMIShareUsers], AMIFilterRegex);
+  let instance = await ec2.ec2Instance(ec2Name, ami.id, ec2SecurityGroup.id, subnet[0][0]);
+  
+  let rdsSecurityGroup = await ec2.emptySecurityGroup(vpc, "EC2 security group");
+  await ec2.addSecurityGroupRule("EC2 security group rule", "tcp", rdsSecurityGroup.id, ec2SecurityGroup.id, 3306, 3306, "ingress");
+  await ec2.addCIDRSecurityGroupRule("Outbound", "-1",rdsSecurityGroup.id, 0, 0, "egress", "0.0.0.0/0")
+
   let rdspg = await rds.createRDSparametergroup();
   let rdssubnet = await rds.createSubnetGroup(subnet[1]);
-  let rdsinstance = await rds.createRDSinstance(rdssubnet, rdspg);
+  let rdsinstance = await rds.createRDSinstance(rdssubnet, rdspg, rdsSecurityGroup.id);
 }
 
 main();
