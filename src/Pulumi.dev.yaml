@@ -1,4 +1,4 @@
-encryptionsalt: v1:pSW28OPp2qg=:v1:Ryxr+3Mm2X6f/KHY:4B0RFiOx0kLWDWAobwOICg4XxUoWIQ==
+encryptionsalt: v1:8IGU3qHy48A=:v1:VOVPUjNAJMRrpT4C:KzBgdK9KnPajYs8wbex4/HruVKWVTg==
 config:
   aws:profile: dev
   aws:region: us-east-1
