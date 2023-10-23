@@ -37,7 +37,7 @@ export async function createRDSinstance(subnetGroup: SubnetGroup, rdsparametergr
     skipFinalSnapshot: true,
     parameterGroupName: rdsparametergroup.name,
     password: pulumiConfig.require("rdsPassword"),
-    username: pulumiConfig.require("rdsUsername"),
+    username: pulumiConfig.require("rdsUserName"),
     vpcSecurityGroupIds: [securityGroup],
     tags: {
       Name: pulumiConfig.require("rdsName"),
