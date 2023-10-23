@@ -37,7 +37,7 @@ config:
   pulumi:rdsSubnetName: "rds-subnet-group"
   pulumi:rdsSecurityGroupName: "EC2 security group"
   pulumi:rdsInstanceClass: "db.t3.micro"
-  pulumi:rdsUsername: "csye6225"
+  pulumi:rdsUserName: "csye6225"
   pulumi:rdsPassword: "csye6225"
   pulumi:rdsEngineType: "mariadb"
   pulumi:rdsStorage: "10"

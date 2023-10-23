@@ -2,7 +2,6 @@ import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Vpc } from "@pulumi/aws/ec2";
 import { Subnet } from "@pulumi/aws/ec2/subnet";
-import { Instance } from "@pulumi/aws/rds/instance";
 let pulumiConfig = new pulumi.Config("pulumi");
 
 export async function createEnvFile(rdsInstance: string, fileName: string) {
