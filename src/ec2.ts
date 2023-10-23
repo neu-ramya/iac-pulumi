@@ -5,22 +5,38 @@ import { Subnet } from "@pulumi/aws/ec2/subnet";
 import { Instance } from "@pulumi/aws/rds/instance";
 let pulumiConfig = new pulumi.Config("pulumi");
 
-export async function createEnvFile(rdsInstance: Instance, fileName: string) {
+export async function createEnvFile(rdsInstance: string, fileName: string) {
   const userData = `#!/bin/bash
     touch ${fileName}
-    echo "DB_CONNECTION=mysql" >> ${fileName}
-    echo "DB_HOST=${rdsInstance.address}" >> ${fileName}
-    echo "DB_PORT=3306" >> ${fileName}
-    echo "DB_DATABASE=csye6225" >> ${fileName}
-    echo "DB_USER=webapp-csye6225" >> ${fileName}
-    echo "DB_PASS=webapp-csye6225" >> ${fileName}
-    echo "PROF_TABLES=false" >> ${fileName}`;
+
+    echo "DB_HOST=${rdsInstance}" >> ${fileName}
+    echo "DB_PORT=${pulumiConfig.require("dbPort")}" >> ${fileName}
+    echo "DB_DATABASE=${pulumiConfig.require("dbName")}" >> ${fileName}
+    echo "DB_USER=${pulumiConfig.require("rdsUserName")}" >> ${fileName}
+    echo "DB_PASS=${pulumiConfig.require("rdsPassword")}" >> ${fileName}
+    echo "PROF_TABLES=false" >> ${fileName}
+    
+    cp /home/admin/target/webapp.zip ${pulumiConfig.require("ec2AppUserHome")}
+    unzip ${pulumiConfig.require("ec2AppUserHome")}/webapp.zip -d ${pulumiConfig.require("ec2AppUserHome")}
+    
+    cd ${pulumiConfig.require("ec2AppUserHome")}
+    sudo rm -rf node_modules
+    npm install
+    chown -R  ${pulumiConfig.require("ec2AppUserName")}:${pulumiConfig.require("ec2AppUserGroupName")} *
+    chown -R ${pulumiConfig.require("ec2AppUserName")}:${pulumiConfig.require("ec2AppUserGroupName")} .*
+    chmod 666 .env
+    sudo systemctl stop ${pulumiConfig.require("systemdUnitName")}
+    sudo systemctl start ${pulumiConfig.require("systemdUnitName")}`;
+
   return userData;
 }
 
 export async function emptySecurityGroup(vpc: Vpc, name: string) {
   const securityGroup = new aws.ec2.SecurityGroup(name, {
     vpcId: vpc.id,
+    tags: {
+      Name: name,
+    }
   });
 
   return securityGroup;
@@ -30,16 +46,16 @@ export async function addCIDRSecurityGroupRule(
   name: string,
   protocol: string,
   targetSecurityGroupId: pulumi.Output<string>,
-  fromPort: number,
-  toPort: number,
+  fromPort: string,
+  toPort: string,
   type: string,
   cidrBlock: string
 ) {
   new aws.ec2.SecurityGroupRule(name, {
     type: type,
     description: name,
-    fromPort: fromPort,
-    toPort: toPort,
+    fromPort: parseInt(fromPort),
+    toPort: parseFloat(toPort),
     protocol: protocol,
     cidrBlocks: [cidrBlock],
     securityGroupId: targetSecurityGroupId,
@@ -51,15 +67,15 @@ export async function addSecurityGroupRule(
   protocol: string,
   targetSecurityGroupId: pulumi.Output<string>,
   srcSecurityGroupId: pulumi.Output<string>,
-  fromPort: number,
-  toPort: number,
+  fromPort: string,
+  toPort: string,
   type: string
 ) {
   new aws.ec2.SecurityGroupRule(name, {
     type: type,
     description: name,
-    fromPort: fromPort,
-    toPort: toPort,
+    fromPort: parseInt(fromPort),
+    toPort: parseInt(toPort),
     protocol: protocol,
     securityGroupId: targetSecurityGroupId,
     sourceSecurityGroupId: srcSecurityGroupId,

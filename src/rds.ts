@@ -3,6 +3,7 @@ import * as aws from "@pulumi/aws";
 import { Subnet } from "@pulumi/aws/ec2/subnet";
 import { ParameterGroup } from "@pulumi/aws/rds/parameterGroup";
 import { SubnetGroup } from "@pulumi/aws/rds/subnetGroup";
+let pulumiConfig = new pulumi.Config("pulumi");
 
 export async function createRDSparametergroup() {
   const csyeParameterGroup = new aws.rds.ParameterGroup(
@@ -15,35 +16,32 @@ export async function createRDSparametergroup() {
 }
 
 export async function createSubnetGroup(privateSubnet: Subnet[]){
-    const rdsSubnetGroup = new aws.rds.SubnetGroup("rds-subnet-group", {
-        subnetIds: [
-            privateSubnet[0].id,
-            privateSubnet[1].id,
-            privateSubnet[2].id,
-        ]
-    });
-    return rdsSubnetGroup;
+  const privateSubnetIDs = privateSubnet.flatMap(subnet => subnet.id)
+  const rdsSubnetGroup = new aws.rds.SubnetGroup(pulumiConfig.require("rdsSubnetName"), {
+      subnetIds: privateSubnetIDs
+  });
+
+  return rdsSubnetGroup;
 }
 
-export async function createRDSinstance(
-  subnetGroup: SubnetGroup ,
-  rdsparametergroup: ParameterGroup,
-  securityGroup: pulumi.Input<string>
-) {
-  const rdsInstance = new aws.rds.Instance("rds-instance", {
-    allocatedStorage: 10,
-    dbName: "csye6225",
-    identifier: "csye6225",
-    instanceClass: "db.t3.micro",
-    engine: "mariadb",
+export async function createRDSinstance(subnetGroup: SubnetGroup, rdsparametergroup: ParameterGroup, securityGroup: pulumi.Input<string>) {
+  const rdsInstance = new aws.rds.Instance(pulumiConfig.require("rdsName"), {
+    allocatedStorage: parseInt(pulumiConfig.require("rdsStorage")),
+    dbName: pulumiConfig.require("dbName"),
+    identifier: pulumiConfig.require("rdsName"),
+    instanceClass:pulumiConfig.require("rdsInstanceClass"),
+    engine: pulumiConfig.require("rdsEngineType"),
     multiAz: false,
     dbSubnetGroupName: subnetGroup.name,
     publiclyAccessible: false,
     skipFinalSnapshot: true,
     parameterGroupName: rdsparametergroup.name,
-    password: "foobarbaz",
-    username: "foo",
-    vpcSecurityGroupIds: [securityGroup]
+    password: pulumiConfig.require("rdsPassword"),
+    username: pulumiConfig.require("rdsUsername"),
+    vpcSecurityGroupIds: [securityGroup],
+    tags: {
+      Name: pulumiConfig.require("rdsName"),
+    }
   });
   return rdsInstance;
 }
@@ -51,5 +49,5 @@ export async function createRDSinstance(
 module.exports = {
   createRDSinstance: createRDSinstance,
   createRDSparametergroup: createRDSparametergroup,
-  createSubnetGroup: createSubnetGroup
+  createSubnetGroup: createSubnetGroup,
 };
