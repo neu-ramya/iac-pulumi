@@ -92,7 +92,7 @@ async function main() {
     vpc,
     pulumiConfig.require("rdsSecurityGroupName")
   );
-  
+
   await ec2.addSecurityGroupRule(
     pulumiConfig.require("rdsSecurityGroupName"),
     "-1",
@@ -102,24 +102,17 @@ async function main() {
     allPort,
     "ingress"
   );
-  await ec2.addCIDRSecurityGroupRule(
-    "All local port for RDS",
+
+  await ec2.addSecurityGroupRule(
+    pulumiConfig.require("rdsSecurityGroupName")+"egress",
     "-1",
     rdsSecurityGroup.id,
+    ec2SecurityGroup.id,
     allPort,
     allPort,
-    "ingress",
-    ipAddressAsString
+    "egress"
   );
-  await ec2.addCIDRSecurityGroupRule(
-    "Outbound-rds",
-    "-1",
-    rdsSecurityGroup.id,
-    allPort,
-    allPort,
-    "egress",
-    openCIDRblock
-  );
+  
   let rdsinstance = await rds.createRDSinstance(
     rdssubnet,
     rdspg,

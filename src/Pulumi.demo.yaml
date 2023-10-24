@@ -30,7 +30,7 @@ config:
   pulumi:keyPairName: "demo-ec2-key"
   pulumi:dbPort: "3306" 
   pulumi:dbName: "csye6225"
-  pulumi:ec2AppUserHome: "/opt/csye6225/"
+  pulumi:ec2AppUserHome: "/opt/csye6225"
   pulumi:ec2AppUserName: "csye6225"
   pulumi:ec2AppUserGroupName: "csye6225"
   pulumi:rdsName: "csye6225-rds"
