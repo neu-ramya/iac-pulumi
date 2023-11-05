@@ -1,8 +1,10 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as ec2 from "./ec2";
+import * as routing from "./routing";
 import * as networking from "./networking";
 import * as rds from "./rds";
 let pulumiConfig = new pulumi.Config("pulumi");
+let awsConfig = new pulumi.Config("aws");
 
 async function main() {
   let vpcCidr = pulumiConfig.require("vpcCIDRblock");
@@ -121,13 +123,16 @@ async function main() {
 
   pulumi.all([rdsinstance.address]).apply(async ([serverName]) => {
     let env = await ec2.createEnvFile(serverName, "/opt/csye6225/.env");
-    await ec2.ec2Instance(
+    let cloudWatchRole = await ec2.cloudWatchRole();
+    let instanceProfile = await ec2.instanceprofile(cloudWatchRole);
+    let ec2instance = await ec2.ec2Instance(
       ec2Name,
       ami.id,
       ec2SecurityGroup.id,
       subnet[0][0],
-      env
+      env,instanceProfile
     );
+    await routing.routing(ec2instance,awsConfig.require("profile"));
   });
 }
 

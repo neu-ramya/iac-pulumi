@@ -2,6 +2,8 @@ import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 import { Vpc } from "@pulumi/aws/ec2";
 import { Subnet } from "@pulumi/aws/ec2/subnet";
+import { Role } from "@pulumi/aws/iam/role";
+import { InstanceProfile } from "@pulumi/aws/iam/instanceProfile";
 let pulumiConfig = new pulumi.Config("pulumi");
 
 export async function createEnvFile(rdsInstance: string, fileName: string) {
@@ -13,7 +15,7 @@ export async function createEnvFile(rdsInstance: string, fileName: string) {
     echo "DB_DATABASE=${pulumiConfig.require("dbName")}" >> ${fileName}
     echo "DB_USER=${pulumiConfig.require("rdsUserName")}" >> ${fileName}
     echo "DB_PASS=${pulumiConfig.require("rdsPassword")}" >> ${fileName}
-    echo "PROF_TABLES=false" >> ${fileName}
+    echo "PROF_TABLES=true" >> ${fileName}
     
     cp /home/admin/target/webapp.zip ${pulumiConfig.require("ec2AppUserHome")}
     unzip ${pulumiConfig.require("ec2AppUserHome")}/webapp.zip -d ${pulumiConfig.require("ec2AppUserHome")}
@@ -103,7 +105,8 @@ export async function ec2Instance(
   amiId: pulumi.Output<string>,
   securityGroup: pulumi.Input<string>,
   publicSubnet: Subnet,
-  userData: string
+  userData: string,
+  instanceProfile: InstanceProfile
 ) {
   const instance = new aws.ec2.Instance(name, {
     ami: amiId,
@@ -112,6 +115,7 @@ export async function ec2Instance(
     subnetId: publicSubnet.id,
     vpcSecurityGroupIds: [securityGroup],
     userData: userData, 
+    iamInstanceProfile: instanceProfile.name,
     tags: {
       Name: name,
     },
@@ -133,6 +137,56 @@ export async function ec2Instance(
   return instance;
 }
 
+export async function cloudWatchRole(){
+  const cloudWatchRole = new aws.iam.Role("cloudWatchRole", {
+    managedPolicyArns: ["arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"],
+    assumeRolePolicy: JSON.stringify({
+      Version: "2012-10-17",
+      Statement: [{
+          Action: "sts:AssumeRole",
+          Effect: "Allow",
+          Sid: "",
+          Principal: {
+              Service: "ec2.amazonaws.com",
+          },
+      }],
+  })
+  //   assumeRolePolicy: JSON.stringify({
+  //     Version: "2012-10-17",
+  //     Statement: [
+  //         {
+  //             Effect: "Allow",
+  //             Action: [
+  //                 "cloudwatch:PutMetricData",
+  //                 "ec2:DescribeVolumes",
+  //                 "ec2:DescribeTags",
+  //                 "logs:PutLogEvents",
+  //                 "logs:DescribeLogStreams",
+  //                 "logs:DescribeLogGroups",
+  //                 "logs:CreateLogStream",
+  //                 "logs:CreateLogGroup"
+  //             ],
+  //             Resource: "*"
+  //         },
+  //         {
+  //             Effect: "Allow",
+  //             Action: [
+  //                 "ssm:GetParameter"
+  //             ],
+  //             Resource: "arn:aws:ssm:*:*:parameter/AmazonCloudWatch-*"
+  //         }
+  //     ]
+  // }),
+});
+return cloudWatchRole;
+}
+
+export async function instanceprofile(cloudWatchRole: Role){
+  const testProfile = new aws.iam.InstanceProfile("testProfile", {role: cloudWatchRole.name});
+  return testProfile;
+}
+
+
 module.exports = {
   ami: ami,
   ec2Instance: ec2Instance,
@@ -140,4 +194,6 @@ module.exports = {
   addSecurityGroupRule: addSecurityGroupRule,
   emptySecurityGroup: emptySecurityGroup,
   createEnvFile: createEnvFile,
+  cloudWatchRole: cloudWatchRole,
+  instanceprofile: instanceprofile,
 };
