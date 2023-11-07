@@ -27,8 +27,9 @@ export async function createEnvFile(rdsInstance: string, fileName: string) {
     chown -R ${pulumiConfig.require("ec2AppUserName")}:${pulumiConfig.require("ec2AppUserGroupName")} .*
     chmod 666 .env
     sudo systemctl stop ${pulumiConfig.require("systemdUnitName")}
-    sudo systemctl start ${pulumiConfig.require("systemdUnitName")}`;
-
+    sudo systemctl start ${pulumiConfig.require("systemdUnitName")}
+    sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/cloudwatch-config.json -s
+    `;  
   return userData;
 }
 
