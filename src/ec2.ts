@@ -29,6 +29,7 @@ export async function createEnvFile(rdsInstance: string, fileName: string) {
     sudo systemctl stop ${pulumiConfig.require("systemdUnitName")}
     sudo systemctl start ${pulumiConfig.require("systemdUnitName")}
     sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/cloudwatch-config.json -s
+    sudo systemctl restart amazon-cloudwatch-agent.service
     `;  
   return userData;
 }
@@ -152,32 +153,6 @@ export async function cloudWatchRole(){
           },
       }],
   })
-  //   assumeRolePolicy: JSON.stringify({
-  //     Version: "2012-10-17",
-  //     Statement: [
-  //         {
-  //             Effect: "Allow",
-  //             Action: [
-  //                 "cloudwatch:PutMetricData",
-  //                 "ec2:DescribeVolumes",
-  //                 "ec2:DescribeTags",
-  //                 "logs:PutLogEvents",
-  //                 "logs:DescribeLogStreams",
-  //                 "logs:DescribeLogGroups",
-  //                 "logs:CreateLogStream",
-  //                 "logs:CreateLogGroup"
-  //             ],
-  //             Resource: "*"
-  //         },
-  //         {
-  //             Effect: "Allow",
-  //             Action: [
-  //                 "ssm:GetParameter"
-  //             ],
-  //             Resource: "arn:aws:ssm:*:*:parameter/AmazonCloudWatch-*"
-  //         }
-  //     ]
-  // }),
 });
 return cloudWatchRole;
 }
