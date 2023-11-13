@@ -41,43 +41,81 @@ async function main() {
 
   let ami = await ec2.ami([AMIShareUsers], AMIFilterRegex);
 
-  let ec2SecurityGroup = await ec2.emptySecurityGroup(vpc, sgName);
-  await ec2.addCIDRSecurityGroupRule(
-    "SSH Port",
-    "tcp",
-    ec2SecurityGroup.id,
-    sshPort,
-    sshPort,
-    "ingress",
-    ipAddressAsString
-  );
+  let lbSecurityGroup = await ec2.emptySecurityGroup(vpc, "loadBalancerSecurityGroup");
   await ec2.addCIDRSecurityGroupRule(
     "HTTP Port",
     "tcp",
-    ec2SecurityGroup.id,
+    lbSecurityGroup.id,
     httpPort,
     httpPort,
     "ingress",
-    ipAddressAsString
+    openCIDRblock
   );
   await ec2.addCIDRSecurityGroupRule(
     "HTTPS Port",
     "tcp",
-    ec2SecurityGroup.id,
+    lbSecurityGroup.id,
     httpsPort,
     httpsPort,
     "ingress",
-    ipAddressAsString
+    openCIDRblock
   );
-  await ec2.addCIDRSecurityGroupRule(
-    "Application Port",
+
+  let ec2SecurityGroup = await ec2.emptySecurityGroup(vpc, sgName);
+  await ec2.addSecurityGroupRule(
+    pulumiConfig.require("sgName")+"ssh",
     "tcp",
     ec2SecurityGroup.id,
-    appPort,
-    appPort,
-    "ingress",
-    ipAddressAsString
+    lbSecurityGroup.id,
+    sshPort,
+    sshPort,
+    "ingress"
   );
+  await ec2.addSecurityGroupRule(
+    pulumiConfig.require("sgName")+"app",
+    "tcp",
+    ec2SecurityGroup.id,
+    lbSecurityGroup.id,
+    appPort,
+    appPort,
+    "ingress"
+  );
+  // await ec2.addCIDRSecurityGroupRule(
+  //   "SSH Port",
+  //   "tcp",
+  //   ec2SecurityGroup.id,
+  //   sshPort,
+  //   sshPort,
+  //   "ingress",
+  //   ipAddressAsString
+  // );
+  // await ec2.addCIDRSecurityGroupRule(
+  //   "HTTP Port",
+  //   "tcp",
+  //   ec2SecurityGroup.id,
+  //   httpPort,
+  //   httpPort,
+  //   "ingress",
+  //   ipAddressAsString
+  // );
+  // await ec2.addCIDRSecurityGroupRule(
+  //   "HTTPS Port",
+  //   "tcp",
+  //   ec2SecurityGroup.id,
+  //   httpsPort,
+  //   httpsPort,
+  //   "ingress",
+  //   ipAddressAsString
+  // );
+  // await ec2.addCIDRSecurityGroupRule(
+  //   "Application Port",
+  //   "tcp",
+  //   ec2SecurityGroup.id,
+  //   appPort,
+  //   appPort,
+  //   "ingress",
+  //   ipAddressAsString
+  // );
   await ec2.addCIDRSecurityGroupRule(
     "Outbound",
     "-1",
