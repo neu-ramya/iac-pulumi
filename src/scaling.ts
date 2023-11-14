@@ -3,9 +3,11 @@ import * as aws from "@pulumi/aws";
 import { InstanceProfile } from "@pulumi/aws/iam/instanceProfile";
 import { Group } from "@pulumi/aws/autoscaling/group";
 import { Topic } from "@pulumi/aws/sns/topic";
-import { LoadBalancer } from "@pulumi/aws/elb/loadBalancer";
 import { SecurityGroup } from "@pulumi/aws/ec2/securityGroup";
 import { Subnet } from "@pulumi/aws/ec2/subnet";
+import { Vpc } from "@pulumi/aws/ec2/vpc";
+import { LoadBalancer } from "@pulumi/aws/lb/loadBalancer";
+import { TargetGroup } from "@pulumi/aws/lb/targetGroup";
 let pulumiConfig = new pulumi.Config("pulumi");
 
 export async function createautoScaling(
@@ -86,7 +88,7 @@ export async function cpuUsageUpAlert(
       evaluationPeriods: 1,
       metricName: "CPUUtilization",
       namespace: "AWS/EC2",
-      period: 300, // 5 minutes
+      period: 300,
       threshold: 5,
       statistic: "Average",
       dimensions: { AutoScalingGroupName: autoScalingGroup.name },
@@ -107,7 +109,7 @@ export async function cpuUsageDownAlert(
       evaluationPeriods: 1,
       metricName: "CPUUtilization",
       namespace: "AWS/EC2",
-      period: 300, // 5 minutes
+      period: 300,
       threshold: 3,
       statistic: "Average",
       dimensions: { AutoScalingGroupName: autoScalingGroup.name },
@@ -117,34 +119,79 @@ export async function cpuUsageDownAlert(
   return cpuUtilizationAlarmLow;
 }
 
+// export async function createLoadBalancer(
+//   lbSecurityGroup: SecurityGroup,
+//   availabilityZone: string[],
+//   publicSubnet: Subnet
+// ) {
+//   const loadBalancer = new aws.elb.LoadBalancer("loadBalancer", {
+//     // availabilityZones: availabilityZone,
+//     subnets: [publicSubnet.id],
+//     listeners: [
+//       {
+//         instancePort: 3000,
+//         instanceProtocol: "http",
+//         lbPort: 80,
+//         lbProtocol: "http",
+//       },
+//     ],
+//     securityGroups: [lbSecurityGroup.id],
+//   });
+//   return loadBalancer;
+// }
+
+export async function createTargetGroup(vpc: Vpc){
+  let tg =  new aws.lb.TargetGroup("myTargetGroup", {
+    port: 3000,
+    protocol: "HTTP",
+    targetType: "instance",
+    vpcId: vpc.id,
+    healthCheck: {
+      path: "/healthz",
+      port: "3000",
+      protocol: "HTTP",
+      interval: 30,
+      timeout: 10,
+      healthyThreshold: 3,
+      unhealthyThreshold: 3,
+      matcher: "200-299",
+    },
+  });
+
+  return tg;
+}
+
 export async function createLoadBalancer(
   lbSecurityGroup: SecurityGroup,
-  availabilityZone: string[],
-  publicSubnet: Subnet
+  publicSubnet: any[],
+  targetGroup: TargetGroup
 ) {
-  const loadBalancer = new aws.elb.LoadBalancer("loadBalancer", {
-    // availabilityZones: availabilityZone,
-    subnets: [publicSubnet.id],
-    listeners: [
-      {
-        instancePort: 3000,
-        instanceProtocol: "http",
-        lbPort: 80,
-        lbProtocol: "http",
-      },
-    ],
+  const alb = new aws.lb.LoadBalancer("myAlb", {
+    internal: false,
+    loadBalancerType: "application",
     securityGroups: [lbSecurityGroup.id],
+    subnets: publicSubnet.map(subnet => subnet.id),
   });
-  return loadBalancer;
-}
+
+  const listener = new aws.lb.Listener("myListener", {
+    loadBalancerArn: alb.arn,
+    port: 80,
+    defaultActions: [{
+        type: "forward",
+        targetGroupArn: targetGroup.arn,
+    }],
+  });
+
+  return alb;
+} 
 
 export async function autoScalingAttach(
   autoscaling_group: Group,
-  aws_elb: LoadBalancer
+  targetGroup: TargetGroup
 ) {
   const asAttachLB = new aws.autoscaling.Attachment("asAttachLB", {
     autoscalingGroupName: autoscaling_group.id,
-    elb: aws_elb.id,
+    lbTargetGroupArn: targetGroup.arn,
   });
 }
 
@@ -156,4 +203,5 @@ module.exports = {
   cpuUsageUpAlert: cpuUsageUpAlert,
   cpuUsageDownAlert: cpuUsageDownAlert,
   createLoadBalancer: createLoadBalancer,
+  createTargetGroup: createTargetGroup,
 };
