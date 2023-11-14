@@ -3,6 +3,7 @@ import * as ec2 from "./ec2";
 import * as routing from "./routing";
 import * as networking from "./networking";
 import * as rds from "./rds";
+import * as scaling from "./scaling";
 let pulumiConfig = new pulumi.Config("pulumi");
 let awsConfig = new pulumi.Config("aws");
 
@@ -42,6 +43,7 @@ async function main() {
   let ami = await ec2.ami([AMIShareUsers], AMIFilterRegex);
 
   let lbSecurityGroup = await ec2.emptySecurityGroup(vpc, "loadBalancerSecurityGroup");
+
   await ec2.addCIDRSecurityGroupRule(
     "HTTP Port",
     "tcp",
@@ -80,42 +82,7 @@ async function main() {
     appPort,
     "ingress"
   );
-  // await ec2.addCIDRSecurityGroupRule(
-  //   "SSH Port",
-  //   "tcp",
-  //   ec2SecurityGroup.id,
-  //   sshPort,
-  //   sshPort,
-  //   "ingress",
-  //   ipAddressAsString
-  // );
-  // await ec2.addCIDRSecurityGroupRule(
-  //   "HTTP Port",
-  //   "tcp",
-  //   ec2SecurityGroup.id,
-  //   httpPort,
-  //   httpPort,
-  //   "ingress",
-  //   ipAddressAsString
-  // );
-  // await ec2.addCIDRSecurityGroupRule(
-  //   "HTTPS Port",
-  //   "tcp",
-  //   ec2SecurityGroup.id,
-  //   httpsPort,
-  //   httpsPort,
-  //   "ingress",
-  //   ipAddressAsString
-  // );
-  // await ec2.addCIDRSecurityGroupRule(
-  //   "Application Port",
-  //   "tcp",
-  //   ec2SecurityGroup.id,
-  //   appPort,
-  //   appPort,
-  //   "ingress",
-  //   ipAddressAsString
-  // );
+
   await ec2.addCIDRSecurityGroupRule(
     "Outbound",
     "-1",
@@ -161,16 +128,19 @@ async function main() {
 
   pulumi.all([rdsinstance.address]).apply(async ([serverName]) => {
     let env = await ec2.createEnvFile(serverName, "/opt/csye6225/.env");
+    // let env = await ec2.createEnvFile("localhost", "/opt/csye6225/.env");
+
     let cloudWatchRole = await ec2.cloudWatchRole();
     let instanceProfile = await ec2.instanceprofile(cloudWatchRole);
-    let ec2instance = await ec2.ec2Instance(
-      ec2Name,
-      ami.id,
-      ec2SecurityGroup.id,
-      subnet[0][0],
-      env,instanceProfile
-    );
-    await routing.routing(ec2instance,awsConfig.require("profile"));
+    let autoScalingGroup= await scaling.createautoScaling(ami.id,env,instanceProfile,ec2SecurityGroup.id, subnet);
+    let elb = await scaling.createLoadBalancer(lbSecurityGroup, await networking.getAvailabilityZone(), subnet[0][0]);
+    let asAttach = await scaling.autoScalingAttach(autoScalingGroup,elb);
+    let scaleUpPolicy = await scaling.asUpPolicy(autoScalingGroup);
+    let scaleDownPolicy = await scaling.asDownPolicy(autoScalingGroup);
+    let cpuUsageUpAlert = await scaling.cpuUsageUpAlert(autoScalingGroup,scaleUpPolicy);
+    let cpuUsageDownAlert = await scaling.cpuUsageDownAlert(autoScalingGroup,scaleDownPolicy);
+    
+    await routing.createAliasARecord(elb,awsConfig.require("profile"));
   });
 }
 
