@@ -20,11 +20,9 @@ export async function vpc(name: string, cidr: string, ownerTag: string) {
 
   return vpc;
 }
-
-export async function subnets(vpc: Vpc) {
+export async function getAvailabilityZone() {
   const numberOfAZsToSelect = 3;
   let numAZsToCreate;
-
   const availableAZs = await aws.getAvailabilityZones({
     state: "available",
   });
@@ -35,7 +33,16 @@ export async function subnets(vpc: Vpc) {
   } else {
     numAZsToCreate = numAZs;
   }
-  const selectedAZs = availableAZs.names?.slice(0, numAZsToCreate);
+
+  return availableAZs.names?.slice(0, numAZsToCreate);
+}
+
+export async function subnets(vpc: Vpc) {
+  const availableAZs = await aws.getAvailabilityZones({
+    state: "available",
+  });
+
+  const selectedAZs = await getAvailabilityZone();
   let i = 0;
   for (const az of selectedAZs) {
     const publicSubnet = new aws.ec2.Subnet(`${az}-public-subnet`, {
@@ -143,4 +150,5 @@ module.exports = {
   subnets: subnets,
   internetGateway: internetGateway,
   routing: routing,
+  getAvailabilityZone: getAvailabilityZone
 }
