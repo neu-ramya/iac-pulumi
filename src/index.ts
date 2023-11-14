@@ -62,8 +62,18 @@ async function main() {
     "ingress",
     openCIDRblock
   );
+  await ec2.addCIDRSecurityGroupRule(
+    "lbOutbound",
+    "-1",
+    lbSecurityGroup.id,
+    allPort,
+    allPort,
+    "egress",
+    openCIDRblock
+  );
 
   let ec2SecurityGroup = await ec2.emptySecurityGroup(vpc, sgName);
+  
   await ec2.addSecurityGroupRule(
     pulumiConfig.require("sgName")+"ssh",
     "tcp",
@@ -73,6 +83,7 @@ async function main() {
     sshPort,
     "ingress"
   );
+  
   await ec2.addSecurityGroupRule(
     pulumiConfig.require("sgName")+"app",
     "tcp",
@@ -132,15 +143,17 @@ async function main() {
 
     let cloudWatchRole = await ec2.cloudWatchRole();
     let instanceProfile = await ec2.instanceprofile(cloudWatchRole);
-    let autoScalingGroup= await scaling.createautoScaling(ami.id,env,instanceProfile,ec2SecurityGroup.id, subnet);
-    let elb = await scaling.createLoadBalancer(lbSecurityGroup, await networking.getAvailabilityZone(), subnet[0][0]);
-    let asAttach = await scaling.autoScalingAttach(autoScalingGroup,elb);
-    let scaleUpPolicy = await scaling.asUpPolicy(autoScalingGroup);
-    let scaleDownPolicy = await scaling.asDownPolicy(autoScalingGroup);
-    let cpuUsageUpAlert = await scaling.cpuUsageUpAlert(autoScalingGroup,scaleUpPolicy);
-    let cpuUsageDownAlert = await scaling.cpuUsageDownAlert(autoScalingGroup,scaleDownPolicy);
+    let autoScalingGroup= await scaling.createautoScaling(ami.id, env, instanceProfile, ec2SecurityGroup.id, subnet);
+    const targetGroup = await scaling.createTargetGroup(vpc);
+
+    let alb = await scaling.createLoadBalancer(lbSecurityGroup, subnet[0], targetGroup);
+    let asAttach = await scaling.autoScalingAttach(autoScalingGroup, targetGroup);
+    // let scaleUpPolicy = await scaling.asUpPolicy(autoScalingGroup);
+    // let scaleDownPolicy = await scaling.asDownPolicy(autoScalingGroup);
+    // let cpuUsageUpAlert = await scaling.cpuUsageUpAlert(autoScalingGroup,scaleUpPolicy);
+    // let cpuUsageDownAlert = await scaling.cpuUsageDownAlert(autoScalingGroup,scaleDownPolicy);
     
-    await routing.createAliasARecord(elb,awsConfig.require("profile"));
+    await routing.createAliasARecord(alb,awsConfig.require("profile"));
   });
 }
 
