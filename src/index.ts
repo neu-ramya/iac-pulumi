@@ -74,16 +74,16 @@ async function main() {
 
   let ec2SecurityGroup = await ec2.emptySecurityGroup(vpc, sgName);
   
-  await ec2.addSecurityGroupRule(
-    pulumiConfig.require("sgName")+"ssh",
+  await ec2.addCIDRSecurityGroupRule(
+    "SSH Port",
     "tcp",
     ec2SecurityGroup.id,
-    lbSecurityGroup.id,
     sshPort,
     sshPort,
-    "ingress"
+    "ingress",
+    ipAddressAsString
   );
-  
+
   await ec2.addSecurityGroupRule(
     pulumiConfig.require("sgName")+"app",
     "tcp",
@@ -150,8 +150,8 @@ async function main() {
     let asAttach = await scaling.autoScalingAttach(autoScalingGroup, targetGroup);
     let scaleUpPolicy = await scaling.asUpPolicy(autoScalingGroup);
     let scaleDownPolicy = await scaling.asDownPolicy(autoScalingGroup);
-    // let cpuUsageUpAlert = await scaling.cpuUsageUpAlert(autoScalingGroup, scaleUpPolicy);
-    // let cpuUsageDownAlert = await scaling.cpuUsageDownAlert(autoScalingGroup,scaleDownPolicy);
+    let cpuUsageUpAlert = await scaling.cpuUsageUpAlert(autoScalingGroup, scaleUpPolicy);
+    let cpuUsageDownAlert = await scaling.cpuUsageDownAlert(autoScalingGroup, scaleDownPolicy);
     
     await routing.createAliasARecord(alb,awsConfig.require("profile"));
   });
