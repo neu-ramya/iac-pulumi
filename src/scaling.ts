@@ -83,7 +83,7 @@ export async function cpuUsageUpAlert(
   scaleUpPolicy: { arn: pulumi.Input<string | Topic> }
 ) {
   const cpuUtilizationAlarmHigh = new aws.cloudwatch.MetricAlarm(
-    "cpuUtilizationHigh",
+    "csye-cpuUtilizationHigh",
     {
       comparisonOperator: "GreaterThanThreshold",
       evaluationPeriods: 1,
@@ -104,7 +104,7 @@ export async function cpuUsageDownAlert(
   scaleDownPolicy: { arn: pulumi.Input<string | Topic> }
 ) {
   const cpuUtilizationAlarmLow = new aws.cloudwatch.MetricAlarm(
-    "cpuUtilizationLow",
+    "csye-cpuUtilizationLow",
     {
       comparisonOperator: "LessThanThreshold",
       evaluationPeriods: 1,
@@ -149,6 +149,7 @@ export async function createLoadBalancer(
   const alb = new aws.lb.LoadBalancer("csye-6225-alb", {
     internal: false,
     loadBalancerType: "application",
+    ipAddressType: "ipv4",
     securityGroups: [lbSecurityGroup.id],
     subnets: publicSubnet.map((subnet) => subnet.id),
   });
