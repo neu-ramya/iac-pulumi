@@ -6,7 +6,6 @@ import { Topic } from "@pulumi/aws/sns/topic";
 import { SecurityGroup } from "@pulumi/aws/ec2/securityGroup";
 import { Subnet } from "@pulumi/aws/ec2/subnet";
 import { Vpc } from "@pulumi/aws/ec2/vpc";
-import { LoadBalancer } from "@pulumi/aws/lb/loadBalancer";
 import { TargetGroup } from "@pulumi/aws/lb/targetGroup";
 let pulumiConfig = new pulumi.Config("pulumi");
 
@@ -21,8 +20,8 @@ export async function createautoScaling(
     .output(userData)
     .apply((data) => Buffer.from(data).toString("base64"));
 
-  const asTemplate = new aws.ec2.LaunchTemplate("Auto Scaling Template", {
-    namePrefix: "Auto-Scaling-Template",
+  const asTemplate = new aws.ec2.LaunchTemplate("csye-launch-template", {
+    namePrefix: "csye-6225-launch-template",
     imageId: amiId,
     instanceType: "t2.micro",
     keyName: pulumiConfig.require("keyPairName"),
@@ -37,7 +36,8 @@ export async function createautoScaling(
       arn: roleProfile.arn,
     },
   });
-  const asGroup = new aws.autoscaling.Group("auto-scaling-group", {
+
+  const asGroup = new aws.autoscaling.Group("csye-auto-scaling-group", {
     desiredCapacity: 1,
     maxSize: 3,
     minSize: 1,
@@ -64,6 +64,7 @@ export async function asUpPolicy(asGroup: Group) {
     cooldown: 60,
     autoscalingGroupName: asGroup.name,
   });
+
   return scaleUpPolicy;
 }
 
@@ -119,29 +120,8 @@ export async function cpuUsageDownAlert(
   return cpuUtilizationAlarmLow;
 }
 
-// export async function createLoadBalancer(
-//   lbSecurityGroup: SecurityGroup,
-//   availabilityZone: string[],
-//   publicSubnet: Subnet
-// ) {
-//   const loadBalancer = new aws.elb.LoadBalancer("loadBalancer", {
-//     // availabilityZones: availabilityZone,
-//     subnets: [publicSubnet.id],
-//     listeners: [
-//       {
-//         instancePort: 3000,
-//         instanceProtocol: "http",
-//         lbPort: 80,
-//         lbProtocol: "http",
-//       },
-//     ],
-//     securityGroups: [lbSecurityGroup.id],
-//   });
-//   return loadBalancer;
-// }
-
-export async function createTargetGroup(vpc: Vpc){
-  let tg =  new aws.lb.TargetGroup("myTargetGroup", {
+export async function createTargetGroup(vpc: Vpc) {
+  let tg = new aws.lb.TargetGroup("csye-6225-targetGroup", {
     port: 3000,
     protocol: "HTTP",
     targetType: "instance",
@@ -166,24 +146,26 @@ export async function createLoadBalancer(
   publicSubnet: any[],
   targetGroup: TargetGroup
 ) {
-  const alb = new aws.lb.LoadBalancer("myAlb", {
+  const alb = new aws.lb.LoadBalancer("csye-6225-alb", {
     internal: false,
     loadBalancerType: "application",
     securityGroups: [lbSecurityGroup.id],
-    subnets: publicSubnet.map(subnet => subnet.id),
+    subnets: publicSubnet.map((subnet) => subnet.id),
   });
 
   const listener = new aws.lb.Listener("myListener", {
     loadBalancerArn: alb.arn,
     port: 80,
-    defaultActions: [{
+    defaultActions: [
+      {
         type: "forward",
         targetGroupArn: targetGroup.arn,
-    }],
+      },
+    ],
   });
 
   return alb;
-} 
+}
 
 export async function autoScalingAttach(
   autoscaling_group: Group,

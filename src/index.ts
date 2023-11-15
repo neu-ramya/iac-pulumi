@@ -149,9 +149,9 @@ async function main() {
     let alb = await scaling.createLoadBalancer(lbSecurityGroup, subnet[0], targetGroup);
     let asAttach = await scaling.autoScalingAttach(autoScalingGroup, targetGroup);
     let scaleUpPolicy = await scaling.asUpPolicy(autoScalingGroup);
-    let scaleDownPolicy = await scaling.asDownPolicy(autoScalingGroup);
-    let cpuUsageUpAlert = await scaling.cpuUsageUpAlert(autoScalingGroup,scaleUpPolicy);
-    let cpuUsageDownAlert = await scaling.cpuUsageDownAlert(autoScalingGroup,scaleDownPolicy);
+    // let scaleDownPolicy = await scaling.asDownPolicy(autoScalingGroup);
+    // let cpuUsageUpAlert = await scaling.cpuUsageUpAlert(autoScalingGroup, scaleUpPolicy);
+    // let cpuUsageDownAlert = await scaling.cpuUsageDownAlert(autoScalingGroup,scaleDownPolicy);
     
     await routing.createAliasARecord(alb,awsConfig.require("profile"));
   });
