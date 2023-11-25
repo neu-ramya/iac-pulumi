@@ -159,15 +159,17 @@ async function main() {
     
 //   //   await routing.createAliasARecord(alb,awsConfig.require("profile"));
 //   // });
-  let snsTopic = await sns.createSnsTopic();
-  let lambdaFunction = await lambda.createLambda();
+  let dynamoTable = await lambda.createDynamoTable("cyse-assignment-email-tracker");
+  let snsTopic = await sns.createSnsTopic("csye-sns-topic");
 
-  const snsSubscription = pulumi.all([snsTopic.arn, lambdaFunction.arn]).apply(
-    ([topicArn, lambdaArn]) => { sns.createSnsSubscription(topicArn, lambdaArn)}
-  );
-
-  await lambda.setPermission(lambdaFunction, snsTopic)
-  await lambda.createDynamoTable();
+  dynamoTable.name.apply(async(tableName) => {
+    let lambdaFunction = await lambda.createLambda("csye-lambda-function", tableName);
+    pulumi.all([snsTopic.arn, lambdaFunction.arn]).apply(
+      ([topicArn, lambdaArn]) => { sns.createSnsSubscription(topicArn, lambdaArn)}
+    );
+  
+    await lambda.setPermission(lambdaFunction, snsTopic)
+  })
 }
 
 main();

@@ -2,15 +2,17 @@ import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 
 export async function createSnsSubscription(topicARN: any, endPointARN: any){
-    const userUpdatesSqsTarget = new aws.sns.TopicSubscription("csye-topic-subscription", {
+    const snsSubscription = new aws.sns.TopicSubscription("csye-topic-subscription", {
         endpoint: endPointARN,
         protocol: "lambda",
         topic: topicARN,
     });
+
+    return snsSubscription;
 }
 
-export async function createSnsTopic() {
-  const csyeSnsTopic = new aws.sns.Topic("csye-sns-topic", {});
+export async function createSnsTopic(topicName: string) {
+  const csyeSnsTopic = new aws.sns.Topic(topicName, {});
   const snsTopicPolicy = csyeSnsTopic.arn.apply((arn) =>
     aws.iam.getPolicyDocumentOutput({
       policyId: "__default_policy_ID",
@@ -47,10 +49,12 @@ export async function createSnsTopic() {
       ],
     })
   );
+
   const snsPolicy = new aws.sns.TopicPolicy("csye-sns-policy", {
     arn: csyeSnsTopic.arn,
     policy: snsTopicPolicy.apply((snsTopicPolicy) => snsTopicPolicy.json),
   });
+
   return snsPolicy;
 }
 
