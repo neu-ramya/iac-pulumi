@@ -44,3 +44,4 @@ config:
   pulumi:rdsEngineType: "mariadb"
   pulumi:rdsStorage: "10"
   pulumi:systemdUnitName: "csye-webapp"
+  pulumi:serverlessPath: "../../serverless"
