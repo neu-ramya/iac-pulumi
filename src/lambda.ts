@@ -45,7 +45,10 @@ export async function setPermission(
   return lambdaPermission;
 }
 
-export async function createLambda(lamdbaName: string, dynamoTableName: string) {
+export async function createLambda(
+  lamdbaName: string,
+  dynamoTableName: string
+) {
   const lambdaRole = new aws.iam.Role("cyse-lambda-role", {
     assumeRolePolicy: {
       Version: "2012-10-17",
@@ -66,23 +69,31 @@ export async function createLambda(lamdbaName: string, dynamoTableName: string) 
     policyArn: aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole as any,
   });
 
-    new aws.iam.RolePolicyAttachment("lambdaDynamoPolicyAttachment", {
-        role: lambdaRole.name,
-        policyArn: aws.iam.ManagedPolicies.AmazonDynamoDBFullAccess,
-    });
+  new aws.iam.RolePolicyAttachment("lambdaDynamoPolicyAttachment", {
+    role: lambdaRole.name,
+    policyArn: aws.iam.ManagedPolicies.AmazonDynamoDBFullAccess,
+  });
 
-let lamdbaFunctionCode = pulumiConfig.require("serverlessPath");
-const lambdaFunction = new aws.lambda.Function(lamdbaName, {
+  let lamdbaLayerDeps = pulumiConfig.require("jsDepsPath");
+  let lamdbaFunctionCode = pulumiConfig.require("serverlessPath");
+  const layer = new aws.lambda.LayerVersion("node-deps", {
+    layerName: "node-deps",
+    code: new pulumi.asset.FileArchive(lamdbaLayerDeps),
+    compatibleRuntimes: ["nodejs20.x"],
+  });
+
+  const lambdaFunction = new aws.lambda.Function(lamdbaName, {
     runtime: "nodejs20.x",
     handler: "index.handler",
     timeout: 10,
+    layers: [layer.arn],
     memorySize: 256,
     role: lambdaRole.arn,
     code: new pulumi.asset.FileArchive(lamdbaFunctionCode),
     environment: {
-        variables: {
-            "tableName": dynamoTableName,
-        },
+      variables: {
+        tableName: dynamoTableName,
+      },
     },
   });
 
