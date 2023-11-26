@@ -2,6 +2,9 @@ encryptionsalt: v1:i9paMyJkT6Y=:v1:uGE6/WAO9jtvcN+Z:2B8EAHXouVl4UjgU3hRzymxZWj5J
 config:
   aws:profile: demo
   aws:region: us-east-1
+  gcp:region: 'multi-region'
+  gcp:project: 'csye-demo'
+  gcp:bucketName: 'cyse-6225-demo'
   pulumi:ownerTag: demo
   pulumi:vpcName: demo-csye6225
   pulumi:internetGatewayName: demo-ig-csye6225

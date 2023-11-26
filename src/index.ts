@@ -3,6 +3,7 @@ import * as ec2 from "./ec2";
 import * as routing from "./routing";
 import * as networking from "./networking";
 import * as rds from "./rds";
+import * as gcp from "./gcp";
 import * as scaling from "./scaling";
 import * as sns from "./sns";
 import * as lambda from "./lambda";
@@ -10,6 +11,7 @@ import * as aws from "@pulumi/aws";
 
 let pulumiConfig = new pulumi.Config("pulumi");
 let awsConfig = new pulumi.Config("aws");
+let gcpConfig = new pulumi.Config("gcp");
 
 async function main() {
   let vpcCidr = pulumiConfig.require("vpcCIDRblock");
@@ -22,6 +24,10 @@ async function main() {
   let pubRTName = pulumiConfig.require("publicRouteTableName");
   let privRTName = pulumiConfig.require("privateRouteTableName");
   let sgName = pulumiConfig.require("sgName");
+
+  let gcpBucketName = gcpConfig.require("bucketName");
+  let gcpProjectID = gcpConfig.require("projectID");
+  let gcpRegion = gcpConfig.require("region");
 
   let sshPort = pulumiConfig.require("SSHport");
   let appPort = pulumiConfig.require("Appport");
@@ -108,6 +114,7 @@ async function main() {
     openCIDRblock
   );
 
+  // let gcpBucket = gcp.createBucket(gcpBucketName, gcpRegion, gcpProjectID);
   let rdspg = await rds.createRDSparametergroup();
   let rdssubnet = await rds.createSubnetGroup(subnet[1]);
   let rdsSecurityGroup = await ec2.emptySecurityGroup(
@@ -142,15 +149,16 @@ async function main() {
   );
 
   pulumi.all([rdsinstance.address]).apply(async ([serverName]) => {
-    let env = await ec2.createEnvFile(serverName, "/opt/csye6225/.env");
-    // let env = await ec2.createEnvFile("localhost", "/opt/csye6225/.env");
     let dynamoTable = await lambda.createDynamoTable("cyse-assignment-email-tracker");
     let snsTopic = await sns.createSnsTopic("csye-sns-topic");
   
     dynamoTable.name.apply(async(tableName) => {
       let lambdaFunction = await lambda.createLambda("csye-lambda-function", tableName);
       pulumi.all([snsTopic.arn, lambdaFunction.arn]).apply(
-        async([topicArn, lambdaArn]) => { 
+        async([topicArn, lambdaArn]) => {
+          let env = await ec2.createEnvFile(serverName, topicArn, "/opt/csye6225/.env");
+          // let env = await ec2.createEnvFile("localhost", topicArn, "/opt/csye6225/.env");
+
           sns.createSnsSubscription(topicArn, lambdaArn)
           await lambda.setPermission(lambdaFunction, snsTopic)
           let cloudWatchRole = await ec2.cloudWatchRole(snsTopic);

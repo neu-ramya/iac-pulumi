@@ -6,11 +6,14 @@ import { Role } from "@pulumi/aws/iam/role";
 import { InstanceProfile } from "@pulumi/aws/iam/instanceProfile";
 import { TopicPolicy } from "@pulumi/aws/sns/topicPolicy";
 let pulumiConfig = new pulumi.Config("pulumi");
+let awsConfig = new pulumi.Config("aws");
 
-export async function createEnvFile(rdsInstance: string, fileName: string) {
+export async function createEnvFile(rdsInstance: string, topicArn: string , fileName: string) {
   const userData = `#!/bin/bash
     touch ${fileName}
 
+    echo "SNS_TOPIC_ARN=${topicArn}" >> ${fileName}
+    echo "AWS_REGION=${awsConfig.require("region")}" >> ${fileName}
     echo "DB_HOST=${rdsInstance}" >> ${fileName}
     echo "DB_PORT=${pulumiConfig.require("dbPort")}" >> ${fileName}
     echo "DB_DATABASE=${pulumiConfig.require("dbName")}" >> ${fileName}
