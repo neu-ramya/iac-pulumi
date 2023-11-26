@@ -60,5 +60,5 @@ export async function createSnsTopic(topicName: string) {
 
 module.exports = {
   createSnsTopic: createSnsTopic,
-  createSnsSubscription: createSnsSubscription
+  createSnsSubscription: createSnsSubscription,
 };

@@ -4,6 +4,7 @@ import { Vpc } from "@pulumi/aws/ec2";
 import { Subnet } from "@pulumi/aws/ec2/subnet";
 import { Role } from "@pulumi/aws/iam/role";
 import { InstanceProfile } from "@pulumi/aws/iam/instanceProfile";
+import { TopicPolicy } from "@pulumi/aws/sns/topicPolicy";
 let pulumiConfig = new pulumi.Config("pulumi");
 
 export async function createEnvFile(rdsInstance: string, fileName: string) {
@@ -139,7 +140,7 @@ export async function ec2Instance(
   return instance;
 }
 
-export async function cloudWatchRole(){
+export async function cloudWatchRole(topic: TopicPolicy){
   const cloudWatchRole = new aws.iam.Role("cloudWatchRole", {
     managedPolicyArns: ["arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"],
     assumeRolePolicy: JSON.stringify({
@@ -154,6 +155,25 @@ export async function cloudWatchRole(){
       }],
   })
 });
+
+
+topic.arn.apply((arn) => {
+  let policyDoc = JSON.stringify({
+    Version : "2012-10-17",
+    Statement: [{
+        Sid: "SNSPublishPolicy",
+        Effect: "Allow",
+        Action: [ "sns:Publish" ],
+        Resource: arn,
+    }],
+  })
+
+  new aws.iam.RolePolicy("SNSpolicyAttachment", {
+    role: cloudWatchRole.name,
+    policy: policyDoc,
+  });
+});
+
 return cloudWatchRole;
 }
 
