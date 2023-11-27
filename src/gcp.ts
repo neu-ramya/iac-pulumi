@@ -1,28 +1,44 @@
 import * as gcp from "@pulumi/gcp";
+import { Account } from "@pulumi/gcp/serviceaccount/account";
 import * as pulumi from "@pulumi/pulumi";
 
-let gcpConfig = new pulumi.Config("gcp");
-
-
-// Create a GCP storage bucket
-export async function createBucket(name: string, region: string, project: string) {
-    const myBucket = new gcp.storage.Bucket("MyBucket", {
-        // project: "csye-6225",  // Replace with your Project ID
-        name: "csye-6225",  // Replace with your desired bucket name
-        location: "EU",
+export async function createBucket(bucketName: string) {
+    const bucket = new gcp.storage.Bucket(bucketName, {
+        location: "US",
     });
-    
 
-    return myBucket;
+    return bucket;
+}
+ 
+export async function attachBucketIAM(bucketName: pulumi.Output<string>, serviceAccount: Account, role: string) {
+    const bucketIAMBinding = new gcp.storage.BucketIAMMember("seviceaccount-admin-access", {
+        bucket: bucketName,
+        role: role,
+        member: pulumi.interpolate`serviceAccount:${serviceAccount.email}`,
+    });
 }
 
-// Create a GCP Service Account
-// const sa = new gcp.serviceAccount.Account("my-service-account", {});
+export async function createServiceAccount(serviceAccountName: string){
+    const serviceAccount = new gcp.serviceaccount.Account(serviceAccountName, {
+        accountId: serviceAccountName,
+        displayName: serviceAccountName,
+    });
 
-// // Create access keys for the new service account
-// const saKeys = new gcp.serviceAccount.Key("my-service-account-key", { serviceAccountId: sa.accountId });
+    return serviceAccount;
+}
+
+export async function createServiceAccountAccessKey(serviceAccount: Account) {
+    const accountKey = new gcp.serviceaccount.Key("sa-access-key", {
+        serviceAccountId: serviceAccount.accountId,
+    });
+
+    return accountKey;
+}
 
 module.exports = {
     createBucket: createBucket,
-  };
+    createServiceAccount: createServiceAccount,
+    createServiceAccountAccessKey: createServiceAccountAccessKey,
+    attachBucketIAM: attachBucketIAM,
+};
   

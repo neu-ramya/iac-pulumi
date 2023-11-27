@@ -2,50 +2,51 @@ encryptionsalt: v1:i9paMyJkT6Y=:v1:uGE6/WAO9jtvcN+Z:2B8EAHXouVl4UjgU3hRzymxZWj5J
 config:
   aws:profile: demo
   aws:region: us-east-1
-  gcp:region: 'multi-region'
-  gcp:project: 'csye-demo'
-  gcp:bucketName: 'cyse-6225-demo'
-  pulumi:ownerTag: demo
-  pulumi:vpcName: demo-csye6225
-  pulumi:internetGatewayName: demo-ig-csye6225
+  gcp:project: csye-demo-406400
+  gcp:csyeBucketName: ramya-demo-bucket
+  gcp:csyeServiceAccoutName: ramya-demo-sa
+  pulumi:AMISelectorRegex: "csye6225-debian12-[0-9]+"
+  pulumi:AMIShareUsers: "042487768049"
+  pulumi:Appport: "3000"
+  pulumi:HTTPSport: "443"
+  pulumi:HTTPport: "80"
+  pulumi:SSHport: "22"
+  pulumi:allPort: "0"
+  pulumi:dbName: "csye6225"
+  pulumi:dbPort: "3306"
+  pulumi:ec2AppUserGroupName: "csye6225"
+  pulumi:ec2AppUserHome: "/opt/csye6225"
+  pulumi:ec2AppUserName: "csye6225"
+  pulumi:ec2Name: "pulumi-demo-instance"
+  pulumi:ec2Type: "t3.nano"
   pulumi:internetGatewayAttachmentName: demo-igw-csye6225
-  pulumi:publicRouteTableName: demo-pub-route-table-csye6225
-  pulumi:privateRouteTableName: demo-pri-route-table-csye6225
-  pulumi:publicRouteName: demo-pub-route-csye6225
+  pulumi:internetGatewayName: demo-ig-csye6225
+  pulumi:jsDepsPath: "../../serverless"
+  pulumi:keyPairName: "demo-ec2-key"
+  pulumi:mailgunAPIKey: ""
   pulumi:openCIDRblock: "0.0.0.0/0"
-  pulumi:vpcCIDRblock: "10.0.0.0/16"
-  pulumi:publicSubnetCIDRblock:
-    - "10.0.2.0/24"
-    - "10.0.4.0/24"
-    - "10.0.6.0/24"
+  pulumi:ownerTag: demo
+  pulumi:privateRouteTableName: demo-pri-route-table-csye6225
   pulumi:privateSubnetCIDRblock:
     - "10.0.1.0/24"
     - "10.0.3.0/24"
     - "10.0.5.0/24"
-  pulumi:ec2Type: "t3.nano"
-  pulumi:ec2Name: "pulumi-demo-instance"
-  pulumi:sgName: "application security group"
-  pulumi:AMIShareUsers: "042487768049"
-  pulumi:AMISelectorRegex: "csye6225-debian12-[0-9]+"
-  pulumi:SSHport: "22" 
-  pulumi:allPort: "0"
-  pulumi:HTTPport: "80"
-  pulumi:HTTPSport: "443"
-  pulumi:Appport: "3000"
-  pulumi:keyPairName: "demo-ec2-key"
-  pulumi:dbPort: "3306" 
-  pulumi:dbName: "csye6225"
-  pulumi:ec2AppUserHome: "/opt/csye6225"
-  pulumi:ec2AppUserName: "csye6225"
-  pulumi:ec2AppUserGroupName: "csye6225"
-  pulumi:rdsName: "csye6225-rds"
-  pulumi:rdsSubnetName: "demo-rds-subnet-group"
-  pulumi:rdsSecurityGroupName: "EC2 security group"
-  pulumi:rdsInstanceClass: "db.t3.micro"
-  pulumi:rdsUserName: "csye6225"
-  pulumi:rdsPassword: "csye6225"
+  pulumi:publicRouteName: demo-pub-route-csye6225
+  pulumi:publicRouteTableName: demo-pub-route-table-csye6225
+  pulumi:publicSubnetCIDRblock:
+    - "10.0.2.0/24"
+    - "10.0.4.0/24"
+    - "10.0.6.0/24"
   pulumi:rdsEngineType: "mariadb"
+  pulumi:rdsInstanceClass: "db.t3.micro"
+  pulumi:rdsName: "csye6225-rds"
+  pulumi:rdsPassword: "csye6225"
+  pulumi:rdsSecurityGroupName: "EC2 security group"
   pulumi:rdsStorage: "10"
-  pulumi:systemdUnitName: "csye-webapp"
+  pulumi:rdsSubnetName: "demo-rds-subnet-group"
+  pulumi:rdsUserName: "csye6225"
   pulumi:serverlessPath: "../../serverless/tasks"
-  pulumi:jsDepsPath: "../../serverless"
+  pulumi:sgName: "application security group"
+  pulumi:systemdUnitName: "csye-webapp"
+  pulumi:vpcCIDRblock: "10.0.0.0/16"
+  pulumi:vpcName: demo-csye6225
