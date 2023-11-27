@@ -5,6 +5,7 @@ import * as pulumi from "@pulumi/pulumi";
 export async function createBucket(bucketName: string) {
     const bucket = new gcp.storage.Bucket(bucketName, {
         location: "US",
+        forceDestroy: true,
     });
 
     return bucket;
