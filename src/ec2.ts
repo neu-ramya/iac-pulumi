@@ -5,6 +5,7 @@ import { Subnet } from "@pulumi/aws/ec2/subnet";
 import { Role } from "@pulumi/aws/iam/role";
 import { InstanceProfile } from "@pulumi/aws/iam/instanceProfile";
 import { TopicPolicy } from "@pulumi/aws/sns/topicPolicy";
+import { Key } from "@pulumi/gcp/serviceaccount/key";
 let pulumiConfig = new pulumi.Config("pulumi");
 let awsConfig = new pulumi.Config("aws");
 

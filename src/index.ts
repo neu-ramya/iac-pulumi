@@ -11,7 +11,8 @@ import * as aws from "@pulumi/aws";
 
 let pulumiConfig = new pulumi.Config("pulumi");
 let awsConfig = new pulumi.Config("aws");
-let gcpConfig = new pulumi.Config("gcp");
+let gcpProjectName = new pulumi.Config("gcp").require('project');
+let gcpConfig = new pulumi.Config("pulumi");
 
 async function main() {
   let vpcCidr = pulumiConfig.require("vpcCIDRblock");
@@ -25,9 +26,9 @@ async function main() {
   let privRTName = pulumiConfig.require("privateRouteTableName");
   let sgName = pulumiConfig.require("sgName");
 
-  let gcpBucketName = gcpConfig.require("bucketName");
-  let gcpProjectID = gcpConfig.require("projectID");
-  let gcpRegion = gcpConfig.require("region");
+  let saName = gcpConfig.require("csyeServiceAccoutName");
+  let gcpBucketName = gcpConfig.require("csyeBucketName");
+  let gcpServiceAccount = await gcp.createServiceAccount(saName);
 
   let sshPort = pulumiConfig.require("SSHport");
   let appPort = pulumiConfig.require("Appport");
@@ -114,7 +115,6 @@ async function main() {
     openCIDRblock
   );
 
-  // let gcpBucket = gcp.createBucket(gcpBucketName, gcpRegion, gcpProjectID);
   let rdspg = await rds.createRDSparametergroup();
   let rdssubnet = await rds.createSubnetGroup(subnet[1]);
   let rdsSecurityGroup = await ec2.emptySecurityGroup(
@@ -151,35 +151,48 @@ async function main() {
   pulumi.all([rdsinstance.address]).apply(async ([serverName]) => {
     let dynamoTable = await lambda.createDynamoTable("cyse-assignment-email-tracker");
     let snsTopic = await sns.createSnsTopic("csye-sns-topic");
-  
-    dynamoTable.name.apply(async(tableName) => {
-      let lambdaFunction = await lambda.createLambda("csye-lambda-function", tableName);
-      pulumi.all([snsTopic.arn, lambdaFunction.arn]).apply(
-        async([topicArn, lambdaArn]) => {
-          let env = await ec2.createEnvFile(serverName, topicArn, "/opt/csye6225/.env");
-          // let env = await ec2.createEnvFile("localhost", topicArn, "/opt/csye6225/.env");
-
-          sns.createSnsSubscription(topicArn, lambdaArn)
-          await lambda.setPermission(lambdaFunction, snsTopic)
-          let cloudWatchRole = await ec2.cloudWatchRole(snsTopic);
-          let instanceProfile = await ec2.instanceprofile(cloudWatchRole);
-          let autoScalingGroup= await scaling.createautoScaling(ami.id, env, instanceProfile, ec2SecurityGroup.id, subnet);
-          const targetGroup = await scaling.createTargetGroup(vpc);
-
-          let alb = await scaling.createLoadBalancer(lbSecurityGroup, subnet[0], targetGroup);
-          let asAttach = await scaling.autoScalingAttach(autoScalingGroup, targetGroup);
-          let scaleUpPolicy = await scaling.asUpPolicy(autoScalingGroup);
-          let scaleDownPolicy = await scaling.asDownPolicy(autoScalingGroup);
-          let cpuUsageUpAlert = await scaling.cpuUsageUpAlert(autoScalingGroup, scaleUpPolicy);
-          let cpuUsageDownAlert = await scaling.cpuUsageDownAlert(autoScalingGroup, scaleDownPolicy);
-          
-          await routing.createAliasARecord(alb,awsConfig.require("profile"));
-        }
-      );
     
-      
+    var gcpBucket = await gcp.createBucket(gcpBucketName);
+    let accessKey = await gcp.createServiceAccountAccessKey(gcpServiceAccount)
+    await gcp.attachBucketIAM(gcpBucket.name, gcpServiceAccount, "roles/storage.admin")
+    dynamoTable.name.apply(async(tableName) => {
+      pulumi.all([accessKey.privateKey]).apply(
+        async([gcpJSON]) => { 
+          let mailgunAPIKey = pulumiConfig.require("mailgunAPIKey");
+          let lambdaFunction = await lambda.createLambda("csye-lambda-function", tableName, atob(gcpJSON), gcpBucket.name, gcpProjectName, mailgunAPIKey);
+          pulumi.all([snsTopic.arn, lambdaFunction.arn]).apply(
+            async([topicArn, lambdaArn]) => {
+              let env = await ec2.createEnvFile(serverName, topicArn, "/opt/csye6225/.env");
+              // let env = await ec2.createEnvFile("localhost", topicArn, "/opt/csye6225/.env");
+    
+              sns.createSnsSubscription(topicArn, lambdaArn)
+              await lambda.setPermission(lambdaFunction, snsTopic)
+              let cloudWatchRole = await ec2.cloudWatchRole(snsTopic);
+              let instanceProfile = await ec2.instanceprofile(cloudWatchRole);
+              let autoScalingGroup= await scaling.createautoScaling(ami.id, env, instanceProfile, ec2SecurityGroup.id, subnet);
+              const targetGroup = await scaling.createTargetGroup(vpc);
+    
+              let alb = await scaling.createLoadBalancer(lbSecurityGroup, subnet[0], targetGroup);
+              let asAttach = await scaling.autoScalingAttach(autoScalingGroup, targetGroup);
+              let scaleUpPolicy = await scaling.asUpPolicy(autoScalingGroup);
+              let scaleDownPolicy = await scaling.asDownPolicy(autoScalingGroup);
+              let cpuUsageUpAlert = await scaling.cpuUsageUpAlert(autoScalingGroup, scaleUpPolicy);
+              let cpuUsageDownAlert = await scaling.cpuUsageDownAlert(autoScalingGroup, scaleDownPolicy);
+              
+              await routing.createAliasARecord(alb,awsConfig.require("profile"));
+            }
+          );
+        });
     })
   });
+}
+
+async function gcpObject() {
+  let saName = gcpConfig.require("csyeServiceAccoutName");
+  let gcpBucketName = gcpConfig.require("csyeBucketName");
+  let gcpServiceAccount = await gcp.createServiceAccount(saName);
+  let gcpBucket = await gcp.createBucket(gcpBucketName);
+  let accessKey = await gcp.createServiceAccountAccessKey(gcpServiceAccount)
 }
 
 main();

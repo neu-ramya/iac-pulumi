@@ -1,5 +1,6 @@
 import * as aws from "@pulumi/aws";
 import { Table } from "@pulumi/aws/dynamodb/table";
+import { Key } from "@pulumi/gcp/serviceaccount/key";
 import * as pulumi from "@pulumi/pulumi";
 import * as path from "path";
 let pulumiConfig = new pulumi.Config("pulumi");
@@ -47,7 +48,11 @@ export async function setPermission(
 
 export async function createLambda(
   lamdbaName: string,
-  dynamoTableName: string
+  dynamoTableName: string,
+  gcpSaJSON: string,
+  gcpBucketName: pulumi.Output<string>,
+  gcpProjectID: string,
+  mailgunAPIKey: string,
 ) {
   const lambdaRole = new aws.iam.Role("cyse-lambda-role", {
     assumeRolePolicy: {
@@ -93,6 +98,10 @@ export async function createLambda(
     environment: {
       variables: {
         tableName: dynamoTableName,
+        gcpSaJSON: gcpSaJSON,
+        gcpBucketName:gcpBucketName,
+        gcpProjectID: gcpProjectID,
+        mailgunAPIKey: mailgunAPIKey,
       },
     },
   });
