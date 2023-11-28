@@ -23,7 +23,7 @@ config:
   pulumi:internetGatewayName: ig-csye6225
   pulumi:jsDepsPath: "../../serverless"
   pulumi:keyPairName: "dev-us-east-1"
-  pulumi:mailgunAPIKey: ""
+  pulumi:mailgunAPIKey: "a039b8e55885211cee0acf28fafe3076-5d2b1caa-a42912d1"
   pulumi:openCIDRblock: "0.0.0.0/0"
   pulumi:ownerTag: ramya
   pulumi:privateRouteTableName: pri-route-table-csye6225

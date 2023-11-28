@@ -9,9 +9,10 @@ export async function createDynamoTable(tableName: string) {
   const dynamoTable = new aws.dynamodb.Table(tableName, {
     attributes: [
       { name: "id", type: "S" },
-      { name: "assignmentNumber", type: "N" },
+      { name: "assignmentNumber", type: "S" },
+      { name: "assignmentAttempt", type: "N" },
       { name: "emailaddress", type: "S" },
-      { name: "valid", type: "B" },
+      { name: "emailSent", type: "B" },
     ],
     hashKey: "id",
     rangeKey: "emailaddress",
