@@ -13,6 +13,7 @@ export async function createDynamoTable(tableName: string) {
       { name: "assignmentAttempt", type: "N" },
       { name: "emailaddress", type: "S" },
       { name: "emailSent", type: "S" },
+      { name: "deadlineExceeded", type: "S" },
     ],
     hashKey: "id",
     rangeKey: "emailaddress",
@@ -29,6 +30,13 @@ export async function createDynamoTable(tableName: string) {
       {
         name: "emailSentIndex",
         hashKey: "emailSent",
+        writeCapacity: 1,
+        readCapacity: 1,
+        projectionType: "ALL",
+      },
+      {
+        name: "deadlineExceededIndex",
+        hashKey: "deadlineExceeded",
         writeCapacity: 1,
         readCapacity: 1,
         projectionType: "ALL",
