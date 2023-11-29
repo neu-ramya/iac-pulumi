@@ -181,8 +181,8 @@ topic.arn.apply((arn) => {
 return cloudWatchRole;
 }
 
-export async function instanceprofile(cloudWatchRole: Role){
-  const testProfile = new aws.iam.InstanceProfile("testProfile", {role: cloudWatchRole.name});
+export async function instanceprofile(ec2Role: Role){
+  const testProfile = new aws.iam.InstanceProfile("testProfile", {role: ec2Role.name});
   return testProfile;
 }
 

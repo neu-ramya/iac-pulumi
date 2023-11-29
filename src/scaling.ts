@@ -122,13 +122,13 @@ export async function cpuUsageDownAlert(
 
 export async function createTargetGroup(vpc: Vpc) {
   let tg = new aws.lb.TargetGroup("csye-6225-targetGroup", {
-    port: 3000,
+    port: parseInt(pulumiConfig.require("Appport")),
     protocol: "HTTP",
     targetType: "instance",
     vpcId: vpc.id,
     healthCheck: {
       path: "/healthz",
-      port: "3000",
+      port: pulumiConfig.require("Appport"),
       protocol: "HTTP",
       interval: 30,
       timeout: 10,

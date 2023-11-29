@@ -3,10 +3,10 @@ config:
   aws:profile: demo
   aws:region: us-east-1
   gcp:project: csye-demo-406400
-  gcp:csyeBucketName: ramya-demo-bucket
-  gcp:csyeServiceAccoutName: ramya-demo-sa
+  pulumi:csyeBucketName: ramya-demo-bucket
   pulumi:AMISelectorRegex: "csye6225-debian12-[0-9]+"
   pulumi:AMIShareUsers: "042487768049"
+  pulumi:csyeServiceAccoutName: ramya-demo-sa
   pulumi:Appport: "3000"
   pulumi:HTTPSport: "443"
   pulumi:HTTPport: "80"
