@@ -30,9 +30,9 @@ async function main() {
   let gcpBucketName = gcpConfig.require("csyeBucketName");
   let gcpServiceAccount = await gcp.createServiceAccount(saName);
 
-  let sshPort = pulumiConfig.require("SSHport");
+  // let sshPort = pulumiConfig.require("SSHport");
   let appPort = pulumiConfig.require("Appport");
-  let httpPort = pulumiConfig.require("HTTPport");
+  // let httpPort = pulumiConfig.require("HTTPport");
   let httpsPort = pulumiConfig.require("HTTPSport");
   let openCIDRblock = pulumiConfig.require("openCIDRblock");
   let allPort = pulumiConfig.require("allPort");
@@ -55,15 +55,16 @@ async function main() {
 
   let lbSecurityGroup = await ec2.emptySecurityGroup(vpc, "loadBalancerSecurityGroup");
 
-  await ec2.addCIDRSecurityGroupRule(
-    "HTTP Port",
-    "tcp",
-    lbSecurityGroup.id,
-    httpPort,
-    httpPort,
-    "ingress",
-    openCIDRblock
-  );
+  // await ec2.addCIDRSecurityGroupRule(
+  //   "HTTP Port",
+  //   "tcp",
+  //   lbSecurityGroup.id,
+  //   httpPort,
+  //   httpPort,
+  //   "ingress",
+  //   openCIDRblock
+  // );
+
   await ec2.addCIDRSecurityGroupRule(
     "HTTPS Port",
     "tcp",
@@ -73,6 +74,7 @@ async function main() {
     "ingress",
     openCIDRblock
   );
+
   await ec2.addCIDRSecurityGroupRule(
     "lbOutbound",
     "-1",
@@ -85,15 +87,15 @@ async function main() {
 
   let ec2SecurityGroup = await ec2.emptySecurityGroup(vpc, sgName);
   
-  await ec2.addCIDRSecurityGroupRule(
-    "SSH Port",
-    "tcp",
-    ec2SecurityGroup.id,
-    sshPort,
-    sshPort,
-    "ingress",
-    ipAddressAsString
-  );
+  // await ec2.addCIDRSecurityGroupRule(
+  //   "SSH Port",
+  //   "tcp",
+  //   ec2SecurityGroup.id,
+  //   sshPort,
+  //   sshPort,
+  //   "ingress",
+  //   ipAddressAsString
+  // );
 
   await ec2.addSecurityGroupRule(
     pulumiConfig.require("sgName")+"app",
