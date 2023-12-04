@@ -154,16 +154,16 @@ export async function createLoadBalancer(
     subnets: publicSubnet.map((subnet) => subnet.id),
   });
 
-  const listener = new aws.lb.Listener("myListener", {
-    loadBalancerArn: alb.arn,
-    port: 80,
-    defaultActions: [
-      {
-        type: "forward",
-        targetGroupArn: targetGroup.arn,
-      },
-    ],
-  });
+  // const listener = new aws.lb.Listener("myListener", {
+  //   loadBalancerArn: alb.arn,
+  //   port: 80,
+  //   defaultActions: [
+  //     {
+  //       type: "forward",
+  //       targetGroupArn: targetGroup.arn,
+  //     },
+  //   ],
+  // });
 
   return alb;
 }
